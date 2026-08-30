@@ -31,35 +31,27 @@
 <script>
 document.getElementById('dpForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    let username = document.getElementById('username').value.trim();
-    username = username.replace('@', ''); 
+    let username = document.getElementById('username').value.trim().replace('@', '');
     const resultArea = document.getElementById('resultArea');
     
     resultArea.innerHTML = "Fetching profile...";
 
     try {
-        // Hum aik dedicated public JSON endpoint use kar rahe hain jo direct profile data deta hai
-        const apiUrl = `https://www.tikwm.com/api/user/info?unique_id=${username}`;
-        
-        const response = await fetch(apiUrl);
-        const resData = await response.json();
+        const response = await fetch(`/api/get-dp?username=${encodeURIComponent(username)}`);
+        const data = await response.json();
 
-        if (resData && resData.code === 0 && resData.data) {
-            const userInfo = resData.data.user;
-            const avatarUrl = userInfo.avatar; 
-            const profileLink = `https://www.tiktok.com/@${userInfo.unique_id}`;
-
+        if (data.success && data.avatarUrl) {
             resultArea.innerHTML = `
-                <p><b>@${userInfo.unique_id}</b></p>
-                <img src="${avatarUrl}" alt="TikTok DP" class="avatar-img">
+                <p><b>@${username}</b></p>
+                <img src="${data.avatarUrl}" alt="TikTok DP" class="avatar-img">
                 <br><br>
-                <a href="${profileLink}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
+                <a href="https://www.tiktok.com/@${username}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
             `;
         } else {
-            resultArea.innerHTML = `<p style="color: red;">User not found or private profile!</p>`;
+            resultArea.innerHTML = `<p style="color: red;">${data.message || 'User not found!'}</p>`;
         }
     } catch (err) {
-        resultArea.innerHTML = `<p style="color: red;">Failed to fetch data. Try again later.</p>`;
+        resultArea.innerHTML = `<p style="color: red;">Failed to connect to server.</p>`;
     }
 });
 </script>
