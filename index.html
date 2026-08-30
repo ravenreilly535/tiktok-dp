@@ -13,12 +13,10 @@
         button:hover { background: #e0244d; }
         .result { margin-top: 20px; }
         .avatar-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #fe2c55; margin-bottom: 15px; }
-        .profile-name { font-size: 20px; font-weight: bold; color: #fff; margin: 5px 0 2px 0; }
-        .username { font-size: 14px; color: #888; margin-bottom: 15px; }
         .stats-container { display: flex; justify-content: space-around; margin: 15px 0; background: #2a2a2a; padding: 10px; border-radius: 8px; }
         .stat-box { text-align: center; }
-        .stat-box span { display: block; font-size: 13px; color: #aaa; }
-        .stat-box b { font-size: 15px; color: #fff; }
+        .stat-box span { display: block; font-size: 14px; color: #aaa; }
+        .stat-box b { font-size: 16px; color: #fff; }
     </style>
 </head>
 <body>
@@ -53,16 +51,16 @@ document.getElementById('dpForm').addEventListener('submit', async function(e) {
 
         if (data && data.code === 0 && data.data) {
             const userInfo = data.data.user;
-            const stats = data.data.stats;
+            const stats = data.data.stats; // Yeh stats wala object counts layega
 
             const avatarUrl = userInfo.avatar; 
-            const nickname = userInfo.nickname; // Profile Name
+            const nickname = userInfo.nickname;
             const profileLink = `https://www.tiktok.com/@${userInfo.unique_id}`;
 
+            // Numbers ko readable format (jaise 1.2K ya 5M) ya direct dikhane ke liye
             resultArea.innerHTML = `
                 <img src="${avatarUrl}" alt="TikTok DP" class="avatar-img">
-                <div class="profile-name">${nickname}</div>
-                <div class="username">@${userInfo.unique_id}</div>
+                <p><b>${nickname}</b><br><span style="color: #888;">@${userInfo.unique_id}</span></p>
                 
                 <div class="stats-container">
                     <div class="stat-box">
