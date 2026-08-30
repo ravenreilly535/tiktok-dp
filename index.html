@@ -39,8 +39,7 @@ document.getElementById('dpForm').addEventListener('submit', async function(e) {
 
     try {
         const apiUrl = `https://tikwm.com/api/user/info?unique_id=${username}`;
-        // Yahan proxy update kar di hai jo abhi bilkul theek chal rahi hai
-        const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(apiUrl)}`;
+        const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(apiUrl);
 
         const response = await fetch(proxyUrl);
         const data = await response.json();
