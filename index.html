@@ -20,7 +20,7 @@
 <div class="box">
     <h2>TikTok DP Finder</h2>
     <form id="dpForm">
-        <input type="text" id="username" placeholder="Enter username (e.g. designsstudio)" required>
+        <input type="text" id="username" placeholder="Enter username (e.g. ibadhussain738)" required>
         <br>
         <button type="submit">Search DP</button>
     </form>
@@ -31,40 +31,28 @@
 <script>
 document.getElementById('dpForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    let username = document.getElementById('username').value.trim();
-    username = username.replace('@', ''); 
+    let username = document.getElementById('username').value.trim().replace('@', '');
     const resultArea = document.getElementById('resultArea');
     
     resultArea.innerHTML = "Fetching profile...";
 
     try {
-        // TikTok ki official oEmbed endpoint ko CORS proxy ke through call kar rahe hain
-        const profileUrl = `https://www.tiktok.com/@${username}`;
-        const oEmbedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(profileUrl)}`;
-        const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(oEmbedUrl);
-
-        const response = await fetch(proxyUrl);
-        
-        if (!response.ok) {
-            throw new Error("User not found");
-        }
-
+        // Vercel ke apne backend function ko call kar rahe hain
+        const response = await fetch(`/api/get-dp?username=${username}`);
         const data = await response.json();
 
-        if (data && data.thumbnail_url) {
-            const avatarUrl = data.thumbnail_url; // Yeh profile image ka direct link hai
-
+        if (data.success && data.avatarUrl) {
             resultArea.innerHTML = `
                 <p><b>@${username}</b></p>
-                <img src="${avatarUrl}" alt="TikTok DP" class="avatar-img" crossorigin="anonymous">
+                <img src="${data.avatarUrl}" alt="TikTok DP" class="avatar-img">
                 <br><br>
-                <a href="${profileUrl}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
+                <a href="https://www.tiktok.com/@${username}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
             `;
         } else {
             resultArea.innerHTML = `<p style="color: red;">User not found or private profile!</p>`;
         }
     } catch (err) {
-        resultArea.innerHTML = `<p style="color: red;">User not found or blocked by TikTok!</p>`;
+        resultArea.innerHTML = `<p style="color: red;">Failed to fetch data. Try again later.</p>`;
     }
 });
 </script>
