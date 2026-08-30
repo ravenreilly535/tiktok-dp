@@ -20,7 +20,7 @@
 <div class="box">
     <h2>TikTok DP Finder</h2>
     <form id="dpForm">
-        <input type="text" id="username" placeholder="Enter username (e.g. ibadhussain738)" required>
+        <input type="text" id="username" placeholder="Enter username (e.g. designsstudio)" required>
         <br>
         <button type="submit">Search DP</button>
     </form>
@@ -38,29 +38,33 @@ document.getElementById('dpForm').addEventListener('submit', async function(e) {
     resultArea.innerHTML = "Fetching profile...";
 
     try {
-        const targetUrl = `https://www.tikwm.com/api/user/info?unique_id=${username}`;
-        // Yahan proxy change kar di hai jo fast aur reliable hai
-        const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
+        // TikTok ki official oEmbed endpoint ko CORS proxy ke through call kar rahe hain
+        const profileUrl = `https://www.tiktok.com/@${username}`;
+        const oEmbedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(profileUrl)}`;
+        const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(oEmbedUrl);
 
         const response = await fetch(proxyUrl);
+        
+        if (!response.ok) {
+            throw new Error("User not found");
+        }
+
         const data = await response.json();
 
-        if (data && data.code === 0 && data.data) {
-            const userInfo = data.data.user;
-            const avatarUrl = userInfo.avatar; 
-            const profileLink = `https://www.tiktok.com/@${userInfo.unique_id}`;
+        if (data && data.thumbnail_url) {
+            const avatarUrl = data.thumbnail_url; // Yeh profile image ka direct link hai
 
             resultArea.innerHTML = `
-                <p><b>@${userInfo.unique_id}</b></p>
+                <p><b>@${username}</b></p>
                 <img src="${avatarUrl}" alt="TikTok DP" class="avatar-img" crossorigin="anonymous">
                 <br><br>
-                <a href="${profileLink}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
+                <a href="${profileUrl}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
             `;
         } else {
             resultArea.innerHTML = `<p style="color: red;">User not found or private profile!</p>`;
         }
     } catch (err) {
-        resultArea.innerHTML = `<p style="color: red;">Failed to fetch data. Try again later.</p>`;
+        resultArea.innerHTML = `<p style="color: red;">User not found or blocked by TikTok!</p>`;
     }
 });
 </script>
