@@ -11,28 +11,19 @@ export default async function handler(req, res) {
   const cleanUsername = username.replace('@', '').trim();
 
   try {
-    const apiUrl = `https://tikwm.com/api/user/info?unique_id=${cleanUsername}`;
+    // Yeh aik aur free aur working endpoint hai jo profile data deti hai
+    const apiUrl = `https://www.tikwm.com/api/user/info?unique_id=${cleanUsername}`;
     
-    // Real browser headers add kiye hain taaki request block na ho
-    const apiResponse = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': 'https://tikwm.com/'
-      }
-    });
+    // Agar tikwm direct block kare, toh hum free public proxy ko server-side se route kar dete hain
+    const proxyApiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
 
-    if (!apiResponse.ok) {
-      throw new Error(`HTTP error! status: ${apiResponse.status}`);
-    }
-
-    const data = await apiResponse.json();
+    const apiResponse = await fetch(proxyApiUrl);
+    const json = await apiResponse.json();
+    const data = JSON.parse(json.contents);
 
     return res.status(200).json(data);
 
   } catch (error) {
-    return res.status(500).json({ success: false, error: error.message || "Failed to fetch data from server" });
+    return res.status(500).json({ success: false, error: "Failed to fetch data from server" });
   }
 }
