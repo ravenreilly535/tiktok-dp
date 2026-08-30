@@ -32,18 +32,18 @@
 document.getElementById('dpForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     let username = document.getElementById('username').value.trim();
-    username = username.replace('@', ''); // Agar user @ laga de toh usko remove karna
+    username = username.replace('@', ''); 
     const resultArea = document.getElementById('resultArea');
     
     resultArea.innerHTML = "Fetching profile...";
 
     try {
         const targetUrl = `https://www.tikwm.com/api/user/info?unique_id=${username}`;
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+        // Yahan proxy change kar di hai jo fast aur reliable hai
+        const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
 
         const response = await fetch(proxyUrl);
-        const jsonResponse = await response.json();
-        const data = JSON.parse(jsonResponse.contents);
+        const data = await response.json();
 
         if (data && data.code === 0 && data.data) {
             const userInfo = data.data.user;
