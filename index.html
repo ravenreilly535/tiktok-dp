@@ -38,11 +38,13 @@ document.getElementById('dpForm').addEventListener('submit', async function(e) {
     resultArea.innerHTML = "Fetching profile...";
 
     try {
+        // Direct public JSON API endpoint with CORS proxy support
         const apiUrl = `https://tikwm.com/api/user/info?unique_id=${username}`;
-        const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(apiUrl);
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
 
         const response = await fetch(proxyUrl);
-        const data = await response.json();
+        const json = await response.json();
+        const data = JSON.parse(json.contents);
 
         if (data && data.code === 0 && data.data) {
             const userInfo = data.data.user;
