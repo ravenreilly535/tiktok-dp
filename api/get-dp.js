@@ -1,4 +1,8 @@
 export default async function handler(req, res) {
+  // CORS headers enable kar rahe hain taaki Vercel par koi block na aaye
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+
   const { username } = req.query;
 
   if (!username) {
@@ -6,30 +10,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    const profileUrl = `https://www.tiktok.com/@${username}`;
-    const oEmbedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(profileUrl)}`;
-
-    const apiResponse = await fetch(oEmbedUrl, {
+    // TikWM public API ko Vercel ke backend se call kar rahe hain (CORS bypass)
+    const apiUrl = `https://www.tikwm.com/api/user/info?unique_id=${username}`;
+    
+    const apiResponse = await fetch(apiUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
       }
     });
 
-    if (!apiResponse.ok) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
     const data = await apiResponse.json();
 
-    if (data && data.thumbnail_url) {
+    if (data && data.code === 0 && data.data) {
+      const avatarUrl = data.data.user.avatar;
       return res.status(200).json({
         success: true,
-        avatarUrl: data.thumbnail_url
+        avatarUrl: avatarUrl
       });
     } else {
-      return res.status(404).json({ success: false, message: "Avatar not found" });
+      return res.status(404).json({ success: false, message: "User not found or private!" });
     }
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({ success: false, message: "Server error occurred" });
   }
 }
