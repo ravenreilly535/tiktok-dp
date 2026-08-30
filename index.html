@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTok DP Viewer</title>
+    <title>TikTok Profile Viewer</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #121212; color: #fff; }
         .box { background: #1e1e1e; padding: 30px; display: inline-block; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); width: 90%; max-width: 400px; }
@@ -12,17 +12,23 @@
         button { padding: 10px 20px; background: #fe2c55; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 85%; }
         button:hover { background: #e0244d; }
         .result { margin-top: 20px; }
-        .avatar-img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 3px solid #fe2c55; }
+        .avatar-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #fe2c55; margin-bottom: 15px; }
+        .profile-name { font-size: 20px; font-weight: bold; color: #fff; margin: 5px 0 2px 0; }
+        .username { font-size: 14px; color: #888; margin-bottom: 15px; }
+        .stats-container { display: flex; justify-content: space-around; margin: 15px 0; background: #2a2a2a; padding: 10px; border-radius: 8px; }
+        .stat-box { text-align: center; }
+        .stat-box span { display: block; font-size: 13px; color: #aaa; }
+        .stat-box b { font-size: 15px; color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>TikTok DP Finder</h2>
+    <h2>TikTok Profile Viewer</h2>
     <form id="dpForm">
         <input type="text" id="username" placeholder="Enter username (e.g. ibadhussain738)" required>
         <br>
-        <button type="submit">Search DP</button>
+        <button type="submit">Search Profile</button>
     </form>
     
     <div class="result" id="resultArea"></div>
@@ -38,7 +44,6 @@ document.getElementById('dpForm').addEventListener('submit', async function(e) {
     resultArea.innerHTML = "Fetching profile...";
 
     try {
-        // Direct public JSON API endpoint with CORS proxy support
         const apiUrl = `https://tikwm.com/api/user/info?unique_id=${username}`;
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
 
@@ -48,14 +53,34 @@ document.getElementById('dpForm').addEventListener('submit', async function(e) {
 
         if (data && data.code === 0 && data.data) {
             const userInfo = data.data.user;
+            const stats = data.data.stats;
+
             const avatarUrl = userInfo.avatar; 
+            const nickname = userInfo.nickname; // Profile Name
             const profileLink = `https://www.tiktok.com/@${userInfo.unique_id}`;
 
             resultArea.innerHTML = `
-                <p><b>@${userInfo.unique_id}</b></p>
                 <img src="${avatarUrl}" alt="TikTok DP" class="avatar-img">
-                <br><br>
-                <a href="${profileLink}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
+                <div class="profile-name">${nickname}</div>
+                <div class="username">@${userInfo.unique_id}</div>
+                
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <b>${stats.following}</b>
+                        <span>Following</span>
+                    </div>
+                    <div class="stat-box">
+                        <b>${stats.follower}</b>
+                        <span>Followers</span>
+                    </div>
+                    <div class="stat-box">
+                        <b>${stats.heart}</b>
+                        <span>Likes</span>
+                    </div>
+                </div>
+
+                <br>
+                <a href="${profileLink}" target="_blank" style="color: #fe2c55; text-decoration: none; font-weight: bold;">Open on TikTok</a>
             `;
         } else {
             resultArea.innerHTML = `<p style="color: red;">User not found or private profile!</p>`;
