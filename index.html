@@ -31,27 +31,37 @@
 <script>
 document.getElementById('dpForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    let username = document.getElementById('username').value.trim().replace('@', '');
+    let username = document.getElementById('username').value.trim();
+    username = username.replace('@', ''); 
     const resultArea = document.getElementById('resultArea');
     
     resultArea.innerHTML = "Fetching profile...";
 
     try {
-        const response = await fetch(`/api/get-dp?username=${encodeURIComponent(username)}`);
-        const data = await response.json();
+        // Direct public JSON API endpoint with CORS proxy support
+        const apiUrl = `https://tikwm.com/api/user/info?unique_id=${username}`;
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
 
-        if (data.success && data.avatarUrl) {
+        const response = await fetch(proxyUrl);
+        const json = await response.json();
+        const data = JSON.parse(json.contents);
+
+        if (data && data.code === 0 && data.data) {
+            const userInfo = data.data.user;
+            const avatarUrl = userInfo.avatar; 
+            const profileLink = `https://www.tiktok.com/@${userInfo.unique_id}`;
+
             resultArea.innerHTML = `
-                <p><b>@${username}</b></p>
-                <img src="${data.avatarUrl}" alt="TikTok DP" class="avatar-img">
+                <p><b>@${userInfo.unique_id}</b></p>
+                <img src="${avatarUrl}" alt="TikTok DP" class="avatar-img">
                 <br><br>
-                <a href="https://www.tiktok.com/@${username}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
+                <a href="${profileLink}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
             `;
         } else {
-            resultArea.innerHTML = `<p style="color: red;">${data.message || 'User not found!'}</p>`;
+            resultArea.innerHTML = `<p style="color: red;">User not found or private profile!</p>`;
         }
     } catch (err) {
-        resultArea.innerHTML = `<p style="color: red;">Failed to connect to server.</p>`;
+        resultArea.innerHTML = `<p style="color: red;">Failed to fetch data. Try again later.</p>`;
     }
 });
 </script>
