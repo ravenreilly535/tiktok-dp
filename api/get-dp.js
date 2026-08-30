@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // CORS headers enable kar rahe hain taaki Vercel par koi block na aaye
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
@@ -10,27 +9,48 @@ export default async function handler(req, res) {
   }
 
   try {
-    // TikWM public API ko Vercel ke backend se call kar rahe hain (CORS bypass)
-    const apiUrl = `https://www.tikwm.com/api/user/info?unique_id=${username}`;
+    const profileUrl = `https://www.tiktok.com/@${username}`;
     
-    const apiResponse = await fetch(apiUrl, {
+    // TikTok par request bhej rahe hain proper mobile user-agent ke sath
+    const response = await fetch(profileUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5'
       }
     });
 
-    const data = await apiResponse.json();
+    if (!response.ok) {
+      return res.status(404).json({ success: false, message: "Profile not found on TikTok" });
+    }
 
-    if (data && data.code === 0 && data.data) {
-      const avatarUrl = data.data.user.avatar;
+    const html = await response.text();
+    let avatarUrl = "";
+
+    // Method 1: OpenGraph meta tag se image nikalna
+    const ogMatch = html.match(/<meta property="og:image" content="([^"]+)"/i);
+    if (ogMatch && ogMatch[1]) {
+      avatarUrl = ogMatch[1].replace(/&amp;/g, '&');
+    }
+
+    // Method 2: Agar og:image na mile toh fallback JSON data se nikalna
+    if (!avatarUrl) {
+      const jsonMatch = html.match(/"avatarLarger":"([^"]+)"/i);
+      if (jsonMatch && jsonMatch[1]) {
+        avatarUrl = jsonMatch[1].replace(/\\u002F/g, '/').replace(/&amp;/g, '&');
+      }
+    }
+
+    if (avatarUrl) {
       return res.status(200).json({
         success: true,
         avatarUrl: avatarUrl
       });
     } else {
-      return res.status(404).json({ success: false, message: "User not found or private!" });
+      return res.status(404).json({ success: false, message: "Avatar could not be extracted!" });
     }
+
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Server error occurred" });
+    return res.status(500).json({ success: false, message: "Internal server error: " + error.message });
   }
 }
