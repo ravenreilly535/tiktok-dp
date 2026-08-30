@@ -37,30 +37,51 @@ document.getElementById('dpForm').addEventListener('submit', async function(e) {
     
     resultArea.innerHTML = "Fetching profile...";
 
-    try {
-        // Direct public JSON API endpoint with CORS proxy support
-        const apiUrl = `https://tikwm.com/api/user/info?unique_id=${username}`;
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+    const apiUrl = `https://tikwm.com/api/user/info?unique_id=${username}`;
+    
+    // Do proxies ki list (Pehli fail ho gi toh dusri try hogi)
+    const proxies = [
+        `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`,
+        `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`
+    ];
 
-        const response = await fetch(proxyUrl);
-        const json = await response.json();
-        const data = JSON.parse(json.contents);
+    let data = null;
 
-        if (data && data.code === 0 && data.data) {
-            const userInfo = data.data.user;
-            const avatarUrl = userInfo.avatar; 
-            const profileLink = `https://www.tiktok.com/@${userInfo.unique_id}`;
+    for (let proxyUrl of proxies) {
+        try {
+            const response = await fetch(proxyUrl);
+            if (!response.ok) continue;
 
-            resultArea.innerHTML = `
-                <p><b>@${userInfo.unique_id}</b></p>
-                <img src="${avatarUrl}" alt="TikTok DP" class="avatar-img">
-                <br><br>
-                <a href="${profileLink}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
-            `;
-        } else {
-            resultArea.innerHTML = `<p style="color: red;">User not found or private profile!</p>`;
+            let json = await response.json();
+            
+            // Agar allorigins proxy hai toh uska format alag hota hai (.contents)
+            if (proxyUrl.includes('allorigins')) {
+                data = JSON.parse(json.contents);
+            } else {
+                // corsproxy.io direct data deta hai
+                data = json;
+            }
+
+            if (data && data.code === 0 && data.data) {
+                break; // Agar data kamyabi se mil gaya toh loop rok do
+            }
+        } catch (err) {
+            console.log("Proxy failed, trying next...");
         }
-    } catch (err) {
+    }
+
+    if (data && data.code === 0 && data.data) {
+        const userInfo = data.data.user;
+        const avatarUrl = userInfo.avatar; 
+        const profileLink = `https://www.tiktok.com/@${userInfo.unique_id}`;
+
+        resultArea.innerHTML = `
+            <p><b>@${userInfo.unique_id}</b></p>
+            <img src="${avatarUrl}" alt="TikTok DP" class="avatar-img">
+            <br><br>
+            <a href="${profileLink}" target="_blank" style="color: #fe2c55; text-decoration: none;">Open on TikTok</a>
+        `;
+    } else {
         resultArea.innerHTML = `<p style="color: red;">Failed to fetch data. Try again later.</p>`;
     }
 });
